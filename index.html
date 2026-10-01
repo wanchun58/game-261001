@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>經典踩地雷 - 莫蘭迪典雅版</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        morandi: {
+                            bg: '#E2E5DE',       /* 霧灰灰綠背景 */
+                            card: '#EFEEEC',     /* 柔和奶白卡片 */
+                            panel: '#D3D6CE',    /* 深灰綠邊框/面板 */
+                            dark: '#4A5568',     /* 墨灰文字與深色調 */
+                            accent: '#708090',   /* 石板藍主色 */
+                            rose: '#C8A2C8',     /* 莫蘭迪粉紫 */
+                            sage: '#8A9A86',     /* 鼠尾草綠 (勝利) */
+                            terracotta: '#D98A72',/* 磚紅/暖橙 (警告/爆破) */
+                            blue: '#6C8EBF',     /* 莫蘭迪藍 */
+                            sand: '#C5B358',     /* 莫蘭迪金沙 */
+                            cellBg: '#DDDCD7',   /* 未翻開格子 */
+                            cellHover: '#D0CFCA',/* 懸浮格子 */
+                            cellRev: '#E7E6E2'   /* 已翻開格子 */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans TC', 'Plus Jakarta Sans', 'sans-serif'],
+                        digits: ['Plus Jakarta Sans', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #E2E5DE;
+            color: #4A5568;
+        }
+
+        /* Morandi Cell Styles */
+        .cell-hidden {
+            background-color: #D8D7D2;
+            box-shadow: inset 1.5px 1.5px 0px rgba(255, 255, 255, 0.7), inset -1.5px -1.5px 0px rgba(0, 0, 0, 0.12);
+        }
+        .cell-hidden:hover {
+            background-color: #CECDC8;
+        }
+        .cell-hidden:active {
+            box-shadow: inset 1px 1px 0px rgba(0, 0, 0, 0.15);
+            background-color: #C5C4BF;
+        }
+        .cell-revealed {
+            background-color: #EAE9E5;
+            box-shadow: inset 0.5px 0.5px 1.5px rgba(0,0,0,0.06);
+            border: 1px solid #D1D0CB;
+        }
+        .cell-exploded {
+            background-color: #E07A5F !important;
+            color: #ffffff !important;
+        }
+
+        /* Morandi Number Palette */
+        .num-1 { color: #5B7B9C; } /* 莫蘭迪藍 */
+        .num-2 { color: #6F8B69; } /* 莫蘭迪綠 */
+        .num-3 { color: #C26D60; } /* 莫蘭迪紅 */
+        .num-4 { color: #5E5061; } /* 莫蘭迪紫 */
+        .num-5 { color: #9A6B43; } /* 莫蘭迪棕 */
+        .num-6 { color: #4B7F8C; } /* 莫蘭迪青 */
+        .num-7 { color: #3A405A; } /* 深灰藍 */
+        .num-8 { color: #6B6E70; } /* 霧灰 */
+
+        /* Smooth scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #E2E5DE;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #B8BBAE;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9FA296;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-3 sm:p-6">
+
+    <!-- Navigation Header Bar -->
+    <header class="w-full max-w-2xl bg-morandi-card border border-morandi-panel/60 rounded-2xl p-3 sm:p-4 shadow-sm flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-morandi-accent/15 text-morandi-accent flex items-center justify-center text-lg shadow-inner">
+                <i class="fa-solid fa-burst"></i>
+            </div>
+            <div>
+                <h1 class="text-base sm:text-lg font-bold text-morandi-dark tracking-wide">MINESWEEPER</h1>
+                <p class="text-[11px] text-morandi-dark/60 font-medium">莫蘭迪典雅版</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Sound Toggle Button -->
+            <button id="btn-sound" title="音效切換" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-morandi-bg hover:bg-morandi-panel/50 text-morandi-dark border border-morandi-panel/40 flex items-center justify-center transition active:scale-95">
+                <i id="sound-icon" class="fa-solid fa-volume-high text-sm"></i>
+            </button>
+            <!-- Leaderboard Button -->
+            <button id="btn-leaderboard" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-morandi-accent text-white font-semibold text-xs sm:text-sm shadow-sm hover:bg-morandi-accent/90 transition active:scale-95">
+                <i class="fa-solid fa-trophy"></i>
+                <span>最快紀錄</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main class="flex-1 flex flex-col items-center justify-center w-full max-w-full">
+        <!-- Difficulty Selection Bar -->
+        <div class="flex gap-1.5 p-1.5 bg-morandi-card border border-morandi-panel/50 rounded-xl mb-4 shadow-sm">
+            <button data-diff="easy" class="diff-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-morandi-accent text-white shadow-sm">簡單 (9x9)</button>
+            <button data-diff="medium" class="diff-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-morandi-dark/70 hover:text-morandi-dark hover:bg-morandi-bg/60">中等 (16x16)</button>
+            <button data-diff="hard" class="diff-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-morandi-dark/70 hover:text-morandi-dark hover:bg-morandi-bg/60">困難 (30x16)</button>
+        </div>
+
+        <!-- Minesweeper Window Board Card -->
+        <div id="game-card" class="bg-morandi-card p-4 sm:p-5 rounded-2xl border border-morandi-panel/70 shadow-md max-w-full">
+            
+            <!-- Dashboard Display Header -->
+            <div class="bg-morandi-bg p-3 rounded-xl border border-morandi-panel/50 mb-4 flex items-center justify-between shadow-inner">
+                <!-- Mine Counter -->
+                <div class="flex flex-col items-center min-w-[65px]">
+                    <span class="text-[10px] text-morandi-dark/60 font-bold uppercase tracking-wider mb-0.5">MINES</span>
+                    <div id="mine-count" class="font-digits font-extrabold text-xl sm:text-2xl text-morandi-terracotta tracking-wider">
+                        010
+                    </div>
+                </div>
+
+                <!-- Face Button -->
+                <button id="btn-restart" class="w-11 h-11 sm:w-12 sm:h-12 bg-morandi-card hover:bg-white text-2xl border border-morandi-panel/60 rounded-xl flex items-center justify-center shadow-sm active:scale-90 transition">
+                    <span id="face-icon">😊</span>
+                </button>
+
+                <!-- Timer Display -->
+                <div class="flex flex-col items-center min-w-[65px]">
+                    <span class="text-[10px] text-morandi-dark/60 font-bold uppercase tracking-wider mb-0.5">TIME</span>
+                    <div id="timer" class="font-digits font-extrabold text-xl sm:text-2xl text-morandi-sage tracking-wider">
+                        000
+                    </div>
+                </div>
+            </div>
+
+            <!-- Board Wrapper -->
+            <div id="board-wrapper" class="overflow-auto max-w-[88vw] max-h-[62vh] p-1.5 bg-morandi-panel/40 rounded-xl border border-morandi-panel/60">
+                <div id="board" class="grid gap-[1px] select-none"></div>
+            </div>
+        </div>
+
+        <!-- Controls Hint Banner -->
+        <div class="mt-4 bg-morandi-card/80 border border-morandi-panel/40 px-4 py-2.5 rounded-xl max-w-md text-center text-xs text-morandi-dark/80 shadow-sm">
+            <span class="font-bold text-morandi-accent">💡 玩法技巧：</span>
+            左鍵點擊翻開、右鍵插旗。已翻開的數字格在周圍旗子數符合時，直接點擊可觸發 <span class="font-bold underline decoration-morandi-accent/50">Chording 自動連翻</span>！
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-4 text-[11px] text-morandi-dark/50 font-medium">
+        經典踩地雷 · 莫蘭迪色系版
+    </footer>
+
+    <!-- Leaderboard Overlay Modal -->
+    <div id="modal-leaderboard" class="fixed inset-0 bg-morandi-dark/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-morandi-card border border-morandi-panel rounded-2xl w-full max-w-sm overflow-hidden shadow-xl transform transition-all">
+            <!-- Modal Header -->
+            <div class="bg-morandi-bg px-5 py-3.5 flex justify-between items-center border-b border-morandi-panel/60">
+                <h3 class="font-bold text-morandi-dark text-sm sm:text-base flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-morandi-sand"></i> 最快破關紀錄
+                </h3>
+                <button id="btn-close-modal" class="text-morandi-dark/60 hover:text-morandi-dark transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-morandi-panel/40">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content Body -->
+            <div class="p-5">
+                <div id="leaderboard-items" class="space-y-3">
+                    <!-- Dynamic rendering of easy, medium, hard best times -->
+                </div>
+
+                <div class="mt-6 flex justify-between items-center pt-3 border-t border-morandi-panel/40">
+                    <button id="btn-clear-scores" class="text-xs text-morandi-terracotta hover:underline font-medium flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> 清除紀錄
+                    </button>
+                    <button id="btn-modal-ok" class="bg-morandi-accent hover:bg-morandi-accent/90 text-white text-xs px-4 py-2 rounded-xl font-bold transition">
+                        關閉
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Overlay Modal -->
+    <div id="modal-victory" class="fixed inset-0 bg-morandi-dark/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-morandi-card border border-morandi-sage/50 rounded-2xl w-full max-w-xs p-6 text-center shadow-xl">
+            <div class="w-14 h-14 bg-morandi-sage/20 text-morandi-sage rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+            <h3 class="text-lg font-bold text-morandi-dark mb-1">恭喜通關！</h3>
+            <p class="text-xs text-morandi-dark/70 mb-4">成功地排除所有隱藏地雷</p>
+            <div class="bg-morandi-bg p-3 rounded-xl mb-4 border border-morandi-panel/50">
+                <div class="text-[11px] text-morandi-dark/60 font-medium">通關用時</div>
+                <div id="victory-time-display" class="text-2xl font-extrabold font-digits text-morandi-sage">000 秒</div>
+            </div>
+            <p id="high-score-tag" class="text-xs text-morandi-sand font-bold mb-4 hidden">🎉 刷新個人最快紀錄！</p>
+            <button id="btn-victory-close" class="w-full bg-morandi-sage hover:bg-morandi-sage/90 text-white font-bold py-2 rounded-xl text-xs sm:text-sm transition shadow-sm">
+                開啟新局
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           WEB AUDIO API SYNTHESIZER (No external audio files)
+           ========================================================================== */
+        class MorandiAudio {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+                this.loadMutePreference();
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            loadMutePreference() {
+                try {
+                    this.muted = localStorage.getItem('morandi_ms_muted') === 'true';
+                } catch(e) {
+                    this.muted = false;
+                }
+            }
+
+            toggleMute() {
+                this.muted = !this.muted;
+                try {
+                    localStorage.setItem('morandi_ms_muted', String(this.muted));
+                } catch(e) {}
+                return this.muted;
+            }
+
+            playClick() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(450, now);
+                osc.frequency.exponentialRampToValueAtTime(180, now + 0.04);
+
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.04);
+            }
+
+            playFlag(isFlagging = true) {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(isFlagging ? 550 : 850, now);
+                osc.frequency.linearRampToValueAtTime(isFlagging ? 850 : 450, now + 0.05);
+
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.05);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+
+            playChord() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.setValueAtTime(800, now + 0.03);
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            }
+
+            playExplosion() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const duration = 0.6;
+
+                const bufferSize = this.ctx.sampleRate * duration;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(600, now);
+                filter.frequency.exponentialRampToValueAtTime(40, now + duration);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noise.start(now);
+                noise.stop(now + duration);
+            }
+
+            playWin() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+
+                    gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.3);
+                });
+            }
+        }
+
+        const sound = new MorandiAudio();
+
+        const DIFFICULTIES = {
+            easy: { label: '簡單', rows: 9, cols: 9, mines: 10, cellStyle: 'w-8 h-8 sm:w-9 sm:h-9 text-sm sm:text-base' },
+            medium: { label: '中等', rows: 16, cols: 16, mines: 40, cellStyle: 'w-6 h-6 sm:w-7 sm:h-7 text-xs sm:text-sm' },
+            hard: { label: '困難', rows: 16, cols: 30, mines: 99, cellStyle: 'w-5 h-5 sm:w-6 sm:h-6 text-[10px] sm:text-xs' }
+        };
+
+        let currentDiffKey = 'easy';
+        let config = DIFFICULTIES[currentDiffKey];
+
+        let board = [];
+        let gameOver = false;
+        let gameWon = false;
+        let gameStarted = false;
+        let timerInterval = null;
+        let secondsElapsed = 0;
+        let flagsCount = 0;
+        let revealedCount = 0;
+
+        const STORAGE_KEY = 'morandi_ms_bests_v2';
+
+        // 防禦性 LocalStorage 解析
+        function getBestRecords() {
+            const defaultRecords = { easy: null, medium: null, hard: null };
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return defaultRecords;
+                const parsed = JSON.parse(raw);
+                if (typeof parsed !== 'object' || parsed === null) return defaultRecords;
+
+                ['easy', 'medium', 'hard'].forEach(k => {
+                    const val = parseInt(parsed[k], 10);
+                    parsed[k] = (!isNaN(val) && val > 0) ? val : null;
+                });
+                return parsed;
+            } catch(e) {
+                return defaultRecords;
+            }
+        }
+
+        function saveBestRecord(diffKey, timeSec) {
+            const records = getBestRecords();
+            const current = records[diffKey];
+            if (current === null || timeSec < current) {
+                records[diffKey] = timeSec;
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                    return true;
+                } catch(e) {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        function clearAllRecords() {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch(e) {}
+        }
+
+        // DOM elements
+        const boardEl = document.getElementById('board');
+        const mineCountEl = document.getElementById('mine-count');
+        const timerEl = document.getElementById('timer');
+        const faceIconEl = document.getElementById('face-icon');
+        const gameCardEl = document.getElementById('game-card');
+        const soundBtn = document.getElementById('btn-sound');
+        const soundIcon = document.getElementById('sound-icon');
+
+        gameCardEl.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        function updateSoundIcon() {
+            if (sound.muted) {
+                soundIcon.className = 'fa-solid fa-volume-xmark text-morandi-dark/40';
+            } else {
+                soundIcon.className = 'fa-solid fa-volume-high text-morandi-dark';
+            }
+        }
+
+        soundBtn.addEventListener('click', () => {
+            const isMuted = sound.toggleMute();
+            updateSoundIcon();
+            if (!isMuted) sound.playClick();
+        });
+
+        function initGame() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            secondsElapsed = 0;
+            gameOver = false;
+            gameWon = false;
+            gameStarted = false;
+            flagsCount = 0;
+            revealedCount = 0;
+
+            timerEl.textContent = '000';
+            updateMineCountDisplay();
+            faceIconEl.textContent = '😊';
+
+            config = DIFFICULTIES[currentDiffKey];
+            boardEl.style.gridTemplateColumns = `repeat(${config.cols}, minmax(0, 1fr))`;
+            boardEl.innerHTML = '';
+
+            board = [];
+            for (let r = 0; r < config.rows; r++) {
+                const row = [];
+                for (let c = 0; c < config.cols; c++) {
+                    const cell = {
+                        r, c,
+                        isMine: false,
+                        isRevealed: false,
+                        isFlagged: false,
+                        neighborMines: 0,
+                        element: null
+                    };
+
+                    const cellEl = document.createElement('div');
+                    cellEl.className = `${config.cellStyle} cell-hidden flex items-center justify-center font-bold font-sans cursor-pointer rounded transition-colors duration-75 select-none`;
+                    
+                    cellEl.addEventListener('mousedown', (e) => handleCellMouseDown(e, cell));
+                    cellEl.addEventListener('mouseup', (e) => handleCellMouseUp(e, cell));
+
+                    cell.element = cellEl;
+                    boardEl.appendChild(cellEl);
+                    row.push(cell);
+                }
+                board.push(row);
+            }
+
+            plantMines();
+            calculateNeighbors();
+            updateSoundIcon();
+        }
+
+        function plantMines() {
+            let placed = 0;
+            while (placed < config.mines) {
+                const r = Math.floor(Math.random() * config.rows);
+                const c = Math.floor(Math.random() * config.cols);
+                if (!board[r][c].isMine) {
+                    board[r][c].isMine = true;
+                    placed++;
+                }
+            }
+        }
+
+        function calculateNeighbors() {
+            for (let r = 0; r < config.rows; r++) {
+                for (let c = 0; c < config.cols; c++) {
+                    if (board[r][c].isMine) continue;
+                    let count = 0;
+                    getNeighbors(r, c).forEach(n => {
+                        if (n.isMine) count++;
+                    });
+                    board[r][c].neighborMines = count;
+                }
+            }
+        }
+
+        function getNeighbors(r, c) {
+            const neighbors = [];
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    const nr = r + dr;
+                    const nc = c + dc;
+                    if (nr >= 0 && nr < config.rows && nc >= 0 && nc < config.cols) {
+                        neighbors.push(board[nr][nc]);
+                    }
+                }
+            }
+            return neighbors;
+        }
+
+        function startTimer() {
+            if (timerInterval) return;
+            gameStarted = true;
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                if (secondsElapsed > 999) secondsElapsed = 999;
+                timerEl.textContent = String(secondsElapsed).padStart(3, '0');
+            }, 1000);
+        }
+
+        function updateMineCountDisplay() {
+            const remaining = config.mines - flagsCount;
+            const formatted = String(remaining).padStart(3, '0');
+            mineCountEl.textContent = remaining < 0 ? `-${String(Math.abs(remaining)).padStart(2, '0')}` : formatted;
+        }
+
+        function handleCellMouseDown(e, cell) {
+            sound.init();
+            if (gameOver || gameWon) return;
+            if (e.button === 0 && !cell.isFlagged && !cell.isRevealed) {
+                faceIconEl.textContent = '😮';
+            }
+        }
+
+        function handleCellMouseUp(e, cell) {
+            if (gameOver || gameWon) return;
+            faceIconEl.textContent = '😊';
+
+            if (e.button === 0) {
+                if (!gameStarted) startTimer();
+                
+                // 若點擊已翻開的數字格，執行 Chording (連點快翻)
+                if (cell.isRevealed) {
+                    if (cell.neighborMines > 0) {
+                        handleChording(cell);
+                    }
+                } else {
+                    revealCell(cell);
+                }
+            } else if (e.button === 2) {
+                toggleFlag(cell);
+            }
+        }
+
+        function toggleFlag(cell) {
+            if (cell.isRevealed) return;
+            cell.isFlagged = !cell.isFlagged;
+            sound.playFlag(cell.isFlagged);
+
+            if (cell.isFlagged) {
+                flagsCount++;
+                cell.element.innerHTML = '<i class="fa-solid fa-flag text-morandi-terracotta text-xs sm:text-sm"></i>';
+            } else {
+                flagsCount--;
+                cell.element.innerHTML = '';
+            }
+            updateMineCountDisplay();
+        }
+
+        function revealCell(cell) {
+            if (cell.isRevealed || cell.isFlagged) return;
+
+            cell.isRevealed = true;
+            revealedCount++;
+
+            if (cell.isMine) {
+                cell.element.classList.remove('cell-hidden');
+                cell.element.classList.add('cell-exploded');
+                cell.element.innerHTML = '<i class="fa-solid fa-burst text-white text-xs sm:text-sm"></i>';
+                triggerGameOver(false);
+                return;
+            }
+
+            sound.playClick();
+            cell.element.classList.remove('cell-hidden');
+            cell.element.classList.add('cell-revealed');
+
+            if (cell.neighborMines > 0) {
+                cell.element.textContent = cell.neighborMines;
+                cell.element.classList.add(`num-${cell.neighborMines}`);
+            } else {
+                bfsExpand(cell);
+            }
+
+            checkWinCondition();
+        }
+
+        // Chording 雙擊/點擊快翻邏輯
+        function handleChording(cell) {
+            const neighbors = getNeighbors(cell.r, cell.c);
+            const flaggedCount = neighbors.filter(n => n.isFlagged).length;
+
+            // 周圍插旗數量等於數字才開牌
+            if (flaggedCount === cell.neighborMines) {
+                let hitMine = false;
+                let revealedAny = false;
+
+                neighbors.forEach(n => {
+                    if (!n.isRevealed && !n.isFlagged) {
+                        if (n.isMine) {
+                            hitMine = true;
+                            n.isRevealed = true;
+                            n.element.classList.remove('cell-hidden');
+                            n.element.classList.add('cell-exploded');
+                            n.element.innerHTML = '<i class="fa-solid fa-burst text-white text-xs sm:text-sm"></i>';
+                        } else {
+                            revealCell(n);
+                            revealedAny = true;
+                        }
+                    }
+                });
+
+                if (hitMine) {
+                    triggerGameOver(false);
+                } else if (revealedAny) {
+                    sound.playChord();
+                }
+            }
+        }
+
+        // BFS 廣度優先自動展開空白區域
+        function bfsExpand(startCell) {
+            const queue = [startCell];
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                const neighbors = getNeighbors(current.r, current.c);
+
+                for (const neighbor of neighbors) {
+                    if (!neighbor.isRevealed && !neighbor.isFlagged) {
+                        neighbor.isRevealed = true;
+                        revealedCount++;
+
+                        neighbor.element.classList.remove('cell-hidden');
+                        neighbor.element.classList.add('cell-revealed');
+
+                        if (neighbor.neighborMines > 0) {
+                            neighbor.element.textContent = neighbor.neighborMines;
+                            neighbor.element.classList.add(`num-${neighbor.neighborMines}`);
+                        } else {
+                            queue.push(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+
+        function triggerGameOver(isWin) {
+            clearInterval(timerInterval);
+            gameOver = !isWin;
+            gameWon = isWin;
+
+            if (isWin) {
+                sound.playWin();
+                faceIconEl.textContent = '😎';
+
+                const isNewRecord = saveBestRecord(currentDiffKey, secondsElapsed);
+                
+                document.getElementById('victory-time-display').textContent = `${secondsElapsed} 秒`;
+                const tagEl = document.getElementById('high-score-tag');
+                if (isNewRecord) {
+                    tagEl.classList.remove('hidden');
+                } else {
+                    tagEl.classList.add('hidden');
+                }
+                document.getElementById('modal-victory').classList.remove('hidden');
+            } else {
+                sound.playExplosion();
+                faceIconEl.textContent = '😵';
+
+                for (let r = 0; r < config.rows; r++) {
+                    for (let c = 0; c < config.cols; c++) {
+                        const cell = board[r][c];
+                        if (cell.isMine && !cell.isFlagged && !cell.isRevealed) {
+                            cell.element.classList.remove('cell-hidden');
+                            cell.element.classList.add('cell-revealed');
+                            cell.element.innerHTML = '<i class="fa-solid fa-burst text-morandi-dark/70 text-xs sm:text-sm"></i>';
+                        } else if (!cell.isMine && cell.isFlagged) {
+                            cell.element.innerHTML = '<i class="fa-solid fa-xmark text-morandi-terracotta text-sm"></i>';
+                        }
+                    }
+                }
+            }
+        }
+
+        function checkWinCondition() {
+            const totalCells = config.rows * config.cols;
+            if (revealedCount === totalCells - config.mines) {
+                triggerGameOver(true);
+            }
+        }
+
+        // Difficulty Selector Event Handling
+        document.querySelectorAll('.diff-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.diff-btn').forEach(b => {
+                    b.classList.remove('bg-morandi-accent', 'text-white', 'shadow-sm');
+                    b.classList.add('text-morandi-dark/70');
+                });
+                e.target.classList.add('bg-morandi-accent', 'text-white', 'shadow-sm');
+                e.target.classList.remove('text-morandi-dark/70');
+
+                currentDiffKey = e.target.getAttribute('data-diff');
+                initGame();
+            });
+        });
+
+        document.getElementById('btn-restart').addEventListener('click', () => {
+            sound.playClick();
+            initGame();
+        });
+
+        // Leaderboard Modal Event Handling
+        const leaderboardModal = document.getElementById('modal-leaderboard');
+        
+        function renderLeaderboardModal() {
+            const container = document.getElementById('leaderboard-items');
+            const records = getBestRecords();
+
+            const list = [
+                { key: 'easy', label: '簡單 (9x9)', icon: '🟢' },
+                { key: 'medium', label: '中等 (16x16)', icon: '🟡' },
+                { key: 'hard', label: '困難 (30x16)', icon: '🔴' }
+            ];
+
+            container.innerHTML = list.map(item => {
+                const timeSec = records[item.key];
+                const display = timeSec !== null ? `${timeSec} 秒` : '-- 秒';
+                return `
+                    <div class="flex items-center justify-between bg-morandi-bg/80 px-4 py-3 rounded-xl border border-morandi-panel/40">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs">${item.icon}</span>
+                            <span class="text-xs font-bold text-morandi-dark">${item.label}</span>
+                        </div>
+                        <span class="font-digits font-extrabold text-morandi-accent text-base">${display}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('btn-leaderboard').addEventListener('click', () => {
+            sound.playClick();
+            renderLeaderboardModal();
+            leaderboardModal.classList.remove('hidden');
+        });
+
+        document.getElementById('btn-close-modal').addEventListener('click', () => {
+            leaderboardModal.classList.add('hidden');
+        });
+
+        document.getElementById('btn-modal-ok').addEventListener('click', () => {
+            leaderboardModal.classList.add('hidden');
+        });
+
+        document.getElementById('btn-clear-scores').addEventListener('click', () => {
+            if (confirm('確定要清除所有最快破關紀錄嗎？')) {
+                clearAllRecords();
+                renderLeaderboardModal();
+            }
+        });
+
+        document.getElementById('btn-victory-close').addEventListener('click', () => {
+            document.getElementById('modal-victory').classList.add('hidden');
+            initGame();
+        });
+
+        // Close Modal when clicking outside container
+        leaderboardModal.addEventListener('click', (e) => {
+            if (e.target === leaderboardModal) {
+                leaderboardModal.classList.add('hidden');
+            }
+        });
+
+        window.onload = function() {
+            initGame();
+        };
+    </script>
+</body>
+</html>
